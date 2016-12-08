@@ -43,6 +43,10 @@ module RGeo
       #   If a parser is not specified, then the decode method will not
       #   accept a String or IO object; it will require a Hash.
 
+      def decode!(input_, opts = {})
+        Coder.new(opts).decode!(input_)
+      end
+
       def decode(input_, opts = {})
         Coder.new(opts).decode(input_)
       end
