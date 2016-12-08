@@ -85,17 +85,17 @@ module RGeo
 
       # Decode an object from GeoJSON. The input may be a JSON hash, a
       # String, or an IO object from which to read the JSON string.
-      # If an error occurs, nil is returned.
+      # Errors are raised.
 
-      def decode(input)
+      def decode!(input)
         if input.is_a?(IO)
-          input = input.read rescue nil
+          input = input.read
         end
         if input.is_a?(String)
-          input = @json_parser.call(input) rescue nil
+          input = @json_parser.call(input)
         end
         unless input.is_a?(Hash)
-          return nil
+          raise ArgumentError.new("Hash expected, received #{input.class}")
         end
         case input["type"]
         when "FeatureCollection"
@@ -113,6 +113,16 @@ module RGeo
         else
           _decode_geometry(input)
         end
+      end
+
+      # Decode an object from GeoJSON. The input may be a JSON hash, a
+      # String, or an IO object from which to read the JSON string.
+      # If an error occurs, nil is returned.
+
+      def decode(input)
+        decode!(input)
+      rescue StandardError
+        nil
       end
 
       # Returns the RGeo::Feature::Factory used to generate geometry objects.
@@ -187,7 +197,8 @@ module RGeo
       end
 
       def _decode_geometry(input) # :nodoc:
-        case input["type"]
+        type = input["type"]
+        case type
         when "GeometryCollection"
           _decode_geometry_collection(input)
         when "Point"
@@ -203,7 +214,7 @@ module RGeo
         when "MultiPolygon"
           _decode_multi_polygon_coords(input["coordinates"])
         else
-          nil
+          raise ArgumentError.new("Unexpected geometry type #{type.inspect}")
         end
       end
 
